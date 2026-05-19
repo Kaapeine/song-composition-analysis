@@ -1,5 +1,5 @@
 import uuid
-from datetime import datetime, timezone
+from datetime import datetime
 from sqlalchemy import String, Integer, Float, BigInteger, Text, ForeignKey
 from sqlalchemy.dialects.postgresql import UUID, JSONB
 from sqlalchemy.orm import Mapped, mapped_column
@@ -14,7 +14,7 @@ class File(Base):
     storage_key: Mapped[str] = mapped_column(String(512), nullable=False)
     duration_sec: Mapped[float | None] = mapped_column(Float)
     size_bytes: Mapped[int | None] = mapped_column(BigInteger)
-    created_at: Mapped[datetime] = mapped_column(default=lambda: datetime.now(timezone.utc))
+    created_at: Mapped[datetime] = mapped_column(default=datetime.utcnow)
 
 
 class Job(Base):
@@ -27,8 +27,8 @@ class Job(Base):
     progress: Mapped[int] = mapped_column(Integer, default=0)
     error: Mapped[str | None] = mapped_column(Text)
     result: Mapped[dict | None] = mapped_column(JSONB)
-    created_at: Mapped[datetime] = mapped_column(default=lambda: datetime.now(timezone.utc))
+    created_at: Mapped[datetime] = mapped_column(default=datetime.utcnow)
     updated_at: Mapped[datetime] = mapped_column(
-        default=lambda: datetime.now(timezone.utc),
-        onupdate=lambda: datetime.now(timezone.utc),
+        default=datetime.utcnow,
+        onupdate=datetime.utcnow,
     )
