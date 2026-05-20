@@ -20,5 +20,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-from app.api import upload
+from app.api import upload, analyze, jobs
 app.include_router(upload.router)
+app.include_router(analyze.router)
+app.include_router(jobs.router)
