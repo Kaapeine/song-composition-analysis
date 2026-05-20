@@ -3,6 +3,8 @@ __pycache__/
 .env
 data/
 /tmp/music-analyzer/
+spec/
+demix/
 *.egg-info/
 .venv/
 dist/
