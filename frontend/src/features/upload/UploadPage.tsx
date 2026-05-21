@@ -1,11 +1,14 @@
-import { useState } from 'react'
-import { useSearchParams } from 'react-router-dom'
+import { useEffect, useState } from 'react'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import { uploadFile } from '../../api/upload'
 import { startAnalysis } from '../../api/analyze'
+import { usePollJob } from '../../hooks/usePollJob'
 import { Button } from '../../components/Button'
 import { Icon } from '../../components/Icon'
 import { Dropzone } from './Dropzone'
 import { OptionRow } from './OptionRow'
+import { ProgressPanel } from './ProgressPanel'
+import { RecentUploads } from './RecentUploads'
 import type { AnalyzeOptions } from '../../types/api'
 
 const ERROR_MESSAGES: Record<number, string> = {
@@ -19,7 +22,17 @@ export function UploadPage() {
   const [options, setOptions] = useState<AnalyzeOptions>({ detect_mode: true, include_stems: false })
   const [error, setError] = useState<string | null>(null)
   const [uploading, setUploading] = useState(false)
-  const [, setSearchParams] = useSearchParams()
+  const [searchParams, setSearchParams] = useSearchParams()
+  const navigate = useNavigate()
+
+  const jobId = searchParams.get('job')
+  const { job } = usePollJob(jobId)
+
+  useEffect(() => {
+    if (job?.status === 'done') {
+      navigate(`/results/${job.job_id}`, { replace: true })
+    }
+  }, [job?.status, job?.job_id, navigate])
 
   const handleAnalyze = async () => {
     if (!file) return
@@ -35,6 +48,15 @@ export function UploadPage() {
     } finally {
       setUploading(false)
     }
+  }
+
+  if (jobId) {
+    return (
+      <ProgressPanel
+        job={job}
+        onRetry={() => setSearchParams({})}
+      />
+    )
   }
 
   return (
@@ -84,7 +106,7 @@ export function UploadPage() {
         </div>
       </div>
 
-      {/* RecentUploads wired in Task 12 */}
+      <RecentUploads />
     </main>
   )
 }
