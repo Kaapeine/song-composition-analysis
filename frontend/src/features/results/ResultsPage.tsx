@@ -1,11 +1,14 @@
+import { useState } from 'react'
 import { useParams } from 'react-router-dom'
 import { useResults } from '../../hooks/useResults'
 import { HeroSummary } from './HeroSummary'
 import { SubHeader } from './SubHeader'
+import { WaveformCard } from './WaveformCard'
 
 export function ResultsPage() {
   const { jobId } = useParams<{ jobId: string }>()
   const { result, isLoading, error } = useResults(jobId!)
+  const [selectedChord, setSelectedChord] = useState<string | null>(null)
 
   if (isLoading) {
     return (
@@ -38,7 +41,11 @@ export function ResultsPage() {
     <main style={{ maxWidth: 1080, margin: '40px auto', padding: '0 28px', display: 'flex', flexDirection: 'column', gap: 20 }}>
       <SubHeader result={result} />
       <HeroSummary result={result} />
-      {/* WaveformCard added in Task 14 */}
+      <WaveformCard
+        result={result}
+        selectedChord={selectedChord}
+        onChordSelect={setSelectedChord}
+      />
       {/* SignalsCard added in Task 15 */}
       {/* PitchClassCard + InstrumentsCard added in Tasks 16–17 */}
     </main>
