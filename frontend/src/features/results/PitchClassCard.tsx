@@ -2,11 +2,36 @@ import { useState, useMemo } from 'react'
 import { Card } from '../../components/Card'
 import type { PitchClassHistogram } from '../../types/api'
 
-const PITCH_CLASSES = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B']
-const CX = 95
-const CY = 95
-const MIN_R = 24
-const MAX_R = 72
+// Design degree order; backend emits '1 (root)' for root — normalise on load
+const DEGREES = ['1', 'b2', '2', 'b3', '3', '4', 'b5', '5', 'b6', '6', 'b7', '7']
+
+const INTERVAL_NAMES: Record<string, string> = {
+  '1': 'root', 'b2': 'minor 2nd', '2': 'major 2nd', 'b3': 'minor 3rd',
+  '3': 'major 3rd', '4': 'perfect 4th', 'b5': 'tritone', '5': 'perfect 5th',
+  'b6': 'minor 6th', '6': 'major 6th', 'b7': 'minor 7th', '7': 'major 7th',
+}
+
+const SIZE = 220
+const CX = SIZE / 2
+const CY = SIZE / 2
+const INNER = SIZE * 0.20
+const OUTER = SIZE * 0.42
+const LABEL_R = SIZE * 0.475
+const ARC = 360 / 12
+
+function polar(r: number, deg: number): [number, number] {
+  const a = (deg - 90) * Math.PI / 180
+  return [CX + Math.cos(a) * r, CY + Math.sin(a) * r]
+}
+
+function arcPath(r1: number, r2: number, a1: number, a2: number): string {
+  const [x1, y1] = polar(r1, a1)
+  const [x2, y2] = polar(r1, a2)
+  const [x3, y3] = polar(r2, a2)
+  const [x4, y4] = polar(r2, a1)
+  const large = (a2 - a1) > 180 ? 1 : 0
+  return `M${x1},${y1} A${r1},${r1} 0 ${large} 1 ${x2},${y2} L${x3},${y3} A${r2},${r2} 0 ${large} 0 ${x4},${y4} Z`
+}
 
 interface PitchClassCardProps {
   histogram: PitchClassHistogram
@@ -14,125 +39,130 @@ interface PitchClassCardProps {
 }
 
 export function PitchClassCard({ histogram, tonic }: PitchClassCardProps) {
-  const [hovered, setHovered] = useState<string | null>(null)
+  const [hover, setHover] = useState<string | null>(null)
 
-  const values = histogram.values ?? {}
-  const avoidSet = new Set(histogram.avoid_notes ?? [])
-  const maxVal = Math.max(...PITCH_CLASSES.map(pc => values[pc] ?? 0), 0.0001)
+  // Normalise backend key '1 (root)' → '1' so it matches design degree keys
+  const values = useMemo(() => {
+    const out: Record<string, number> = {}
+    for (const [k, v] of Object.entries(histogram.values ?? {})) {
+      out[k === '1 (root)' ? '1' : k] = v
+    }
+    return out
+  }, [histogram.values])
 
-  const slices = useMemo(() => PITCH_CLASSES.map((pc, i) => {
-    const startAngle = (i / 12) * Math.PI * 2 - Math.PI / 2
-    const endAngle = ((i + 1) / 12) * Math.PI * 2 - Math.PI / 2
-    const val = values[pc] ?? 0
-    const outerR = MIN_R + (val / maxVal) * (MAX_R - MIN_R)
+  const avoidSet = useMemo(() => {
+    const raw = histogram.avoid_notes ?? []
+    return new Set(raw.map(n => n === '1 (root)' ? '1' : n))
+  }, [histogram.avoid_notes])
 
-    const cos0 = Math.cos(startAngle), sin0 = Math.sin(startAngle)
-    const cos1 = Math.cos(endAngle),   sin1 = Math.sin(endAngle)
-
-    const path = [
-      `M ${CX + MIN_R * cos0} ${CY + MIN_R * sin0}`,
-      `L ${CX + outerR * cos0} ${CY + outerR * sin0}`,
-      `A ${outerR} ${outerR} 0 0 1 ${CX + outerR * cos1} ${CY + outerR * sin1}`,
-      `L ${CX + MIN_R * cos1} ${CY + MIN_R * sin1}`,
-      `A ${MIN_R} ${MIN_R} 0 0 0 ${CX + MIN_R * cos0} ${CY + MIN_R * sin0}`,
-      'Z',
-    ].join(' ')
-
-    const midAngle = (startAngle + endAngle) / 2
-    const LABEL_R = MAX_R + 14
-    const lx = CX + LABEL_R * Math.cos(midAngle)
-    const ly = CY + LABEL_R * Math.sin(midAngle)
-
-    return { pc, path, lx, ly, val }
-  }), [values, maxVal])
-
-  const top4 = [...PITCH_CLASSES]
-    .sort((a, b) => (values[b] ?? 0) - (values[a] ?? 0))
-    .slice(0, 4)
+  const maxVal = Math.max(...DEGREES.map(d => values[d] ?? 0), 0.0001)
+  const avoidCount = avoidSet.size
 
   return (
-    <Card title="Pitch Classes">
-      <div style={{ padding: '16px 20px', display: 'flex', gap: 24, alignItems: 'flex-start' }}>
+    <Card
+      title="Pitch class"
+      meta={<em className="d-italic-explain">— tonic-relative</em>}
+    >
+      <div style={{ padding: '16px 20px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12 }}>
+        {avoidCount > 0 && (
+          <p className="d-italic-explain" style={{ margin: 0, fontSize: 13, textAlign: 'center', color: 'var(--ink-3)' }}>
+            {[...avoidSet].join(', ')} barely appear —{' '}
+            treat {avoidCount > 1 ? 'them' : 'it'} as <span style={{ color: 'var(--warn)' }}>avoid note{avoidCount > 1 ? 's' : ''}</span> when soloing.
+          </p>
+        )}
+
         {/* Radial wheel */}
-        <div style={{ flexShrink: 0 }}>
-          <svg viewBox="0 0 190 190" width={190} height={190}>
-            {slices.map(({ pc, path, lx, ly }) => {
-              const isTonic = pc === tonic
-              const isAvoid = avoidSet.has(pc)
+        <div style={{ position: 'relative', flexShrink: 0 }}>
+          <svg width={SIZE} height={SIZE}>
+            {/* Concentric guide circles */}
+            {[0.25, 0.5, 0.75, 1].map((f, i) => (
+              <circle key={i} cx={CX} cy={CY} r={INNER + (OUTER - INNER) * f}
+                fill="none" stroke="var(--ink)" opacity="0.06" strokeWidth="0.8"/>
+            ))}
+            {/* Inner cream disk */}
+            <circle cx={CX} cy={CY} r={INNER - 6}
+              fill="var(--paper-3)" stroke="var(--rule)" strokeWidth="0.8"/>
+
+            {/* Radial bars */}
+            {DEGREES.map((d, i) => {
+              const v = values[d] ?? 0
+              const a1 = i * ARC + 2
+              const a2 = (i + 1) * ARC - 2
+              const r2 = INNER + (OUTER - INNER) * v
+              const isAvoid = avoidSet.has(d)
+              const isTonic = d === '1'
+              const isHover = hover === d
               const fill = isTonic
                 ? 'var(--accent)'
                 : isAvoid
-                ? 'color-mix(in oklab, var(--ink) 35%, var(--paper-2))'
-                : 'var(--ink-3)'
+                ? 'color-mix(in oklab, var(--ink) 25%, var(--paper-edge))'
+                : 'color-mix(in oklab, var(--accent) 55%, var(--paper-3))'
               return (
-                <g key={pc}
-                  onMouseEnter={() => setHovered(pc)}
-                  onMouseLeave={() => setHovered(null)}
+                <g key={d}
+                  onMouseEnter={() => setHover(d)}
+                  onMouseLeave={() => setHover(null)}
                   style={{ cursor: 'pointer' }}
                 >
-                  <path d={path} fill={fill}
-                    opacity={hovered === pc ? 1 : isTonic ? 0.85 : 0.55}
-                    stroke="var(--paper)" strokeWidth={1.5}
-                    style={{ transition: 'opacity 100ms' }}
+                  <path
+                    d={arcPath(INNER, r2, a1, a2)}
+                    fill={fill}
+                    opacity={isHover ? 1 : 0.92}
+                    stroke={isHover ? 'var(--ink)' : 'none'}
+                    strokeWidth="1"
                   />
-                  <text x={lx} y={ly} textAnchor="middle" dominantBaseline="middle"
-                    fontSize={8.5} fontFamily="var(--font-mono)"
-                    fill={isTonic ? 'var(--accent)' : 'var(--ink-3)'}
-                    style={{ pointerEvents: 'none' }}
-                  >
-                    {pc}
-                  </text>
                 </g>
               )
             })}
-            {/* Centre tooltip */}
-            {hovered && (
-              <>
-                <text x={CX} y={CY - 7} textAnchor="middle" fontSize={14}
-                  fontFamily="var(--font-display)" fontWeight={500} fill="var(--ink)"
-                >
-                  {hovered}
-                </text>
-                <text x={CX} y={CY + 9} textAnchor="middle" fontSize={9}
-                  fontFamily="var(--font-mono)" fill="var(--ink-3)"
-                >
-                  {Math.round((values[hovered] ?? 0) * 100)}%
-                  {avoidSet.has(hovered) ? ' · avoid' : ''}
-                </text>
-              </>
-            )}
-          </svg>
-        </div>
 
-        {/* Top-4 horizontal bars */}
-        <div style={{ flex: 1, paddingTop: 12 }}>
-          <div className="d-eyebrow" style={{ marginBottom: 12 }}>Top degrees</div>
-          {top4.map(pc => {
-            const val = values[pc] ?? 0
-            const pct = val / maxVal
-            const isTonic = pc === tonic
-            const isAvoid = avoidSet.has(pc)
-            return (
-              <div key={pc} style={{ marginBottom: 10 }}>
-                <div style={{
-                  display: 'flex', justifyContent: 'space-between', marginBottom: 4,
-                  fontSize: 12, fontFamily: 'var(--font-mono)',
-                }}>
-                  <span style={{ color: isTonic ? 'var(--accent)' : 'var(--ink-2)', fontWeight: isTonic ? 500 : 400 }}>
-                    {pc}{isTonic ? ' ①' : ''}{isAvoid ? ' ✕' : ''}
-                  </span>
-                  <span style={{ color: 'var(--ink-4)' }}>{Math.round(val * 100)}%</span>
-                </div>
-                <div style={{ height: 6, background: 'var(--paper-edge)', borderRadius: 3 }}>
-                  <div style={{
-                    height: '100%', width: `${pct * 100}%`, borderRadius: 3,
-                    background: isTonic ? 'var(--accent)' : 'var(--ink-3)',
-                    transition: 'width 300ms ease',
-                  }}/>
-                </div>
-              </div>
-            )
-          })}
+            {/* Degree labels outside arcs */}
+            {DEGREES.map((d, i) => {
+              const a = i * ARC + ARC / 2
+              const [lx, ly] = polar(LABEL_R, a)
+              const isAvoid = avoidSet.has(d)
+              const isTonic = d === '1'
+              return (
+                <text key={d} x={lx} y={ly + 4} textAnchor="middle"
+                  fontFamily="var(--font-mono)" fontSize="11"
+                  fontWeight={isTonic ? 700 : 500}
+                  fill={isAvoid ? 'var(--ink-4)' : 'var(--ink)'}
+                  style={{ textDecoration: isAvoid ? 'line-through' : 'none', pointerEvents: 'none' }}
+                >
+                  {d}
+                </text>
+              )
+            })}
+
+            {/* Centre: italic "tonic" + note name */}
+            <text x={CX} y={CY - 2} textAnchor="middle"
+              fontFamily="var(--font-display)" fontSize="14" fontStyle="italic"
+              fill="var(--ink-3)"
+            >
+              tonic
+            </text>
+            <text x={CX} y={CY + 16} textAnchor="middle"
+              fontFamily="var(--font-display)" fontSize="22" fill="var(--accent)"
+            >
+              {tonic}
+            </text>
+          </svg>
+
+          {/* Hover tooltip below wheel */}
+          {hover && (
+            <div style={{
+              position: 'absolute', left: '50%', bottom: -34, transform: 'translateX(-50%)',
+              background: 'var(--paper-3)', border: '1px solid var(--rule)', borderRadius: 4,
+              padding: '4px 10px',
+              fontFamily: 'var(--font-mono)', fontSize: 11, color: 'var(--ink)',
+              whiteSpace: 'nowrap', boxShadow: '0 4px 10px -4px #00000030',
+              zIndex: 10,
+            }}>
+              <strong>{hover}</strong>
+              <span style={{ color: 'var(--ink-3)' }}>
+                {' '}· {INTERVAL_NAMES[hover]} · {Math.round((values[hover] ?? 0) * 100)}%
+              </span>
+              {avoidSet.has(hover) && <span style={{ color: 'var(--warn)' }}> · avoid</span>}
+            </div>
+          )}
         </div>
       </div>
     </Card>
