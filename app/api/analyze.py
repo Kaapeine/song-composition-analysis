@@ -31,7 +31,11 @@ async def start_analysis(
         background_tasks,
         str(job.id),
         file.storage_key,
-        body.options.model_dump(),
+        {
+            **body.options.model_dump(),
+            "_file_id": str(file.id),
+            "_filename": file.original_name or "unknown",
+        },
     )
 
     return AnalyzeResponse(job_id=job.id, status=job.status)

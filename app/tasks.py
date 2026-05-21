@@ -171,6 +171,8 @@ def _pipeline(job_id: str, storage_key: str, work_dir: Path, options: dict) -> N
 
     result = {
         "job_id": job_id,
+        "filename": options.get("_filename", "unknown"),
+        "playback_url": f"/files/{options.get('_file_id', '')}/audio",
         "duration_sec": duration,
         "key": key_result["key"],
         "bpm": structure["bpm"],
