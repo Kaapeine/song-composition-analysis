@@ -4,6 +4,8 @@ import { useResults } from '../../hooks/useResults'
 import { HeroSummary } from './HeroSummary'
 import { SubHeader } from './SubHeader'
 import { WaveformCard } from './WaveformCard'
+import { SignalsCard } from './SignalsCard'
+import { PitchClassCard } from './PitchClassCard'
 
 export function ResultsPage() {
   const { jobId } = useParams<{ jobId: string }>()
@@ -46,8 +48,12 @@ export function ResultsPage() {
         selectedChord={selectedChord}
         onChordSelect={setSelectedChord}
       />
-      {/* SignalsCard added in Task 15 */}
-      {/* PitchClassCard + InstrumentsCard added in Tasks 16–17 */}
+      <SignalsCard result={result} selectedChord={selectedChord} onChordSelect={setSelectedChord} />
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+        <PitchClassCard histogram={result.pitch_class_histogram} tonic={result.key.root} />
+        {/* InstrumentsCard added in Task 17 */}
+      </div>
+      {/* SectionComparison + TranspositionCard added in Task 17 */}
     </main>
   )
 }
