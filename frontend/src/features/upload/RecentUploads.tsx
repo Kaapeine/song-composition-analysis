@@ -52,7 +52,7 @@ export function RecentUploads() {
                 {relativeTime(job.created_at)}
               </div>
               <Link
-                to={`/results/${job.job_id}`}
+                to={`/analysis/${job.job_id}`}
                 className="btn ghost"
                 style={{ fontSize: 12, whiteSpace: 'nowrap', padding: '6px 10px' }}
               >

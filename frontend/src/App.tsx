@@ -35,7 +35,7 @@ const router = createBrowserRouter([
     element: <Layout />,
     children: [
       { path: '/', element: <UploadPage /> },
-      { path: '/results/:jobId', element: <ResultsPage /> },
+      { path: '/analysis/:jobId', element: <ResultsPage /> },
     ],
   },
 ])

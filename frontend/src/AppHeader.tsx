@@ -9,7 +9,7 @@ interface AppHeaderProps {
 
 export function AppHeader({ theme, onToggleTheme }: AppHeaderProps) {
   const loc = useLocation()
-  const isResults = loc.pathname.startsWith('/results')
+  const isResults = loc.pathname.startsWith('/analysis')
 
   return (
     <header style={{

@@ -30,7 +30,7 @@ export function UploadPage() {
 
   useEffect(() => {
     if (job?.status === 'done') {
-      navigate(`/results/${job.job_id}`, { replace: true })
+      navigate(`/analysis/${job.job_id}`, { replace: true })
     }
   }, [job?.status, job?.job_id, navigate])
 
