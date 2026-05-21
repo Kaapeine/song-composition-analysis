@@ -7,9 +7,11 @@ export interface Section {
 }
 
 export interface ChordEntry {
-  time: number
-  duration: number
+  start: number
+  end: number
   chord: string
+  roman?: string
+  tension?: number
 }
 
 export interface BeatInfo {
