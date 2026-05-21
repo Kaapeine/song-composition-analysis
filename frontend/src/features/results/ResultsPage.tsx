@@ -6,6 +6,8 @@ import { SubHeader } from './SubHeader'
 import { WaveformCard } from './WaveformCard'
 import { SignalsCard } from './SignalsCard'
 import { PitchClassCard } from './PitchClassCard'
+import { InstrumentsCard } from './InstrumentsCard'
+import { SectionComparison } from './SectionComparison'
 
 export function ResultsPage() {
   const { jobId } = useParams<{ jobId: string }>()
@@ -39,6 +41,8 @@ export function ResultsPage() {
     )
   }
 
+  const hasInstruments = Object.keys(result.stems ?? {}).length > 0
+
   return (
     <main style={{ maxWidth: 1080, margin: '40px auto', padding: '0 28px', display: 'flex', flexDirection: 'column', gap: 20 }}>
       <SubHeader result={result} />
@@ -50,10 +54,15 @@ export function ResultsPage() {
       />
       <SignalsCard result={result} selectedChord={selectedChord} onChordSelect={setSelectedChord} />
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
-        <PitchClassCard histogram={result.pitch_class_histogram} tonic={result.key.root} />
-        {/* InstrumentsCard added in Task 17 */}
+        {result.pitch_class_histogram && (
+          <PitchClassCard histogram={result.pitch_class_histogram} tonic={result.key.root} />
+        )}
+        {hasInstruments && <InstrumentsCard stems={result.stems!} />}
       </div>
-      {/* SectionComparison + TranspositionCard added in Task 17 */}
+      {result.section_comparison && (
+        <SectionComparison stats={result.section_comparison} />
+      )}
+      {/* TranspositionCard — re-enable once layout is verified */}
     </main>
   )
 }

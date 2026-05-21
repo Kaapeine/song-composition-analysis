@@ -14,6 +14,14 @@ export interface ChordEntry {
   tension?: number
 }
 
+export type Chord = ChordEntry
+
+export interface PitchClassHistogram {
+  tonic_relative: boolean
+  values: Record<string, number>
+  avoid_notes: string[]
+}
+
 export interface BeatInfo {
   time: number
   beat_in_measure: number
@@ -22,6 +30,8 @@ export interface BeatInfo {
 export interface Stem {
   instrument_label?: string
   instrument_confidence?: number
+  instrument_alternative?: string
+  instrument_alternative_confidence?: number
   pitch_range?: { min: string; max: string; median: string }
   download_url?: string
 }
@@ -71,7 +81,7 @@ export interface AnalysisResult {
     chords: ChordEntry[]
   }
   stems?: Record<string, Stem>
-  pitch_class_histogram?: Record<string, number>
+  pitch_class_histogram?: PitchClassHistogram
   dynamics?: {
     rms: TimeSeries
     loudness_lufs: TimeSeries
