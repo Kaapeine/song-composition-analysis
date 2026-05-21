@@ -3,14 +3,10 @@ import numpy as np
 import librosa
 
 
-_NOTES = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"]
 _INTERVAL_NAMES = ["1 (root)", "b2", "2", "b3", "3", "4", "b5", "5", "b6", "6", "b7", "7"]
 
 
 def analyze_pitch(stems_dir: Path, key_result: dict) -> dict:
-    from basic_pitch.inference import predict
-    from basic_pitch import ICASSP_2022_MODEL_PATH
-
     tonic_idx = key_result["_tonic_idx"]
     mean_chroma = key_result["_chroma"]
 
@@ -22,23 +18,20 @@ def analyze_pitch(stems_dir: Path, key_result: dict) -> dict:
         if not stem_path.exists():
             continue
 
-        _, _, note_events = predict(
-            str(stem_path),
-            ICASSP_2022_MODEL_PATH,
-            onset_threshold=0.5,
-            frame_threshold=0.3,
-            minimum_note_length=58,
+        y, sr = librosa.load(str(stem_path), sr=22050, mono=True)
+        f0, voiced_flag, _ = librosa.pyin(
+            y, sr=sr,
+            fmin=librosa.note_to_hz("C2"),
+            fmax=librosa.note_to_hz("C7"),
         )
 
-        if not note_events:
+        voiced_f0 = f0[voiced_flag & ~np.isnan(f0)]
+        if len(voiced_f0) == 0:
             continue
 
-        midi_pitches = [n[2] for n in note_events if n[4] >= 0.5]
-        if not midi_pitches:
-            continue
-
-        min_midi = int(min(midi_pitches))
-        max_midi = int(max(midi_pitches))
+        midi_pitches = librosa.hz_to_midi(voiced_f0)
+        min_midi = int(np.min(midi_pitches))
+        max_midi = int(np.max(midi_pitches))
         median_midi = int(np.median(midi_pitches))
 
         pitch_ranges[stem_name] = {
