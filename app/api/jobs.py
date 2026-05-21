@@ -1,5 +1,6 @@
 import uuid
 from fastapi import APIRouter, Depends, HTTPException
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.database import get_db
 from app.dependencies import get_current_user
@@ -7,6 +8,28 @@ from app.models.db import Job
 from app.models.schemas import JobStatusResponse
 
 router = APIRouter()
+
+
+@router.get("/jobs", response_model=list[JobStatusResponse])
+async def list_jobs(
+    db: AsyncSession = Depends(get_db),
+    _user=Depends(get_current_user),
+):
+    result = await db.execute(
+        select(Job).order_by(Job.created_at.desc()).limit(20)
+    )
+    return [
+        JobStatusResponse(
+            job_id=j.id,
+            status=j.status,
+            stage=j.stage,
+            progress=j.progress,
+            created_at=j.created_at,
+            result=j.result if j.status == "done" else None,
+            error=j.error,
+        )
+        for j in result.scalars().all()
+    ]
 
 
 @router.get("/jobs/{job_id}", response_model=JobStatusResponse)
