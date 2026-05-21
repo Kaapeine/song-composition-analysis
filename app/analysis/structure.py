@@ -2,17 +2,24 @@ from pathlib import Path
 import torch
 
 
-def analyze_structure(wav_path: Path) -> dict:
+def analyze_structure(wav_path: Path, work_dir: Path) -> tuple[dict, Path]:
     """
-    Run allin1 on wav_path. Returns BPM, beats, downbeats, time signature, sections.
-    allin1 runs Demucs internally — stems land at wav_path.parent/htdemucs/wav_path.stem/.
-    keep_byproducts=True retains those stems so subsequent stages can reuse them.
+    Run allin1 on wav_path. Returns (structure_dict, stems_dir).
+    Passes demix_dir explicitly so stems land inside work_dir rather than
+    the default ./demix (CWD-relative), keeping each job's files isolated.
     """
     import allin1
 
     device = _get_device()
-    result = allin1.analyze(str(wav_path), keep_byproducts=True, device=device)
+    demix_dir = work_dir / "demix"
+    result = allin1.analyze(
+        str(wav_path),
+        keep_byproducts=True,
+        device=device,
+        demix_dir=str(demix_dir),
+    )
 
+    stems_dir = demix_dir / "htdemucs" / wav_path.stem
     time_sig = _infer_time_signature(result.beat_positions)
 
     sections = [
@@ -20,13 +27,14 @@ def analyze_structure(wav_path: Path) -> dict:
         for seg in result.segments
     ]
 
-    return {
+    structure = {
         "bpm": float(result.bpm),
         "time_signature": time_sig,
         "beats": [float(b) for b in result.beats],
         "downbeats": [float(b) for b in result.downbeats],
         "sections": sections,
     }
+    return structure, stems_dir
 
 
 def _get_device() -> str:

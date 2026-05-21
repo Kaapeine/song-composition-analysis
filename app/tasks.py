@@ -85,8 +85,7 @@ def _pipeline(job_id: str, storage_key: str, work_dir: Path, options: dict) -> N
     # Stage 1 — Structure
     try:
         set_progress(job_id, "Analyzing structure", 10)
-        structure = analyze_structure(wav_path)
-        stems_dir = wav_path.parent / "htdemucs" / wav_path.stem
+        structure, stems_dir = analyze_structure(wav_path, work_dir)
     except Exception as e:
         set_failed(job_id, "structure", str(e))
         return
