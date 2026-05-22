@@ -41,7 +41,7 @@ export function SignalLane({
   return (
     <svg
       viewBox={`0 0 ${W} ${height}`}
-      style={{ width: '100%', height, display: 'block' }}
+      style={{ width: '100%', display: 'block' }}
     >
       {sections.map((s, i) => (
         <rect key={i} x={toX(s.start)} y={0}

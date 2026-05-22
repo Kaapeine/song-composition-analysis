@@ -46,7 +46,7 @@ export function ChordLane({
   return (
     <svg
       viewBox={`0 0 ${W} ${H}`}
-      style={{ width: '100%', height: H, display: 'block', overflow: 'visible' }}
+      style={{ width: '100%', display: 'block', overflow: 'visible' }}
     >
       {chords.map((c, i) => {
         const x1 = toX(c.start)

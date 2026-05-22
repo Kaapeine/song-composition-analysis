@@ -5,30 +5,25 @@ import type { Section, TimeSeries } from '../../types/api'
 const W = 1000
 const SECTION_H = 22
 const WAVEFORM_H = 150
-const BEAT_H = 20
-const H = SECTION_H + WAVEFORM_H + BEAT_H   // 192
-const BEAT_Y = SECTION_H + WAVEFORM_H
+const H = SECTION_H + WAVEFORM_H   // 172
 const PEAK_HALF = 54
 
 interface WaveformProps {
   duration: number
   rms: TimeSeries
-  beats: number[]
-  downbeats: number[]
   sections: Section[]
   currentTime: number
   onSeek: (t: number) => void
 }
 
 export function Waveform({
-  duration, rms, beats, downbeats, sections, currentTime, onSeek,
+  duration, rms, sections, currentTime, onSeek,
 }: WaveformProps) {
   const svgRef = useRef<SVGSVGElement>(null)
   const [hoverX, setHoverX] = useState<number | null>(null)
 
   const peaks = useMemo(() => downsampleRms(rms, W), [rms])
   const maxPeak = useMemo(() => Math.max(...peaks, 0.0001), [peaks])
-  const downbeatsSet = useMemo(() => new Set(downbeats.map(String)), [downbeats])
 
   const toX = (t: number) => (t / duration) * W
   const toTime = (x: number) => (x / W) * duration
@@ -45,7 +40,7 @@ export function Waveform({
     <svg
       ref={svgRef}
       viewBox={`0 0 ${W} ${H}`}
-      style={{ width: '100%', height: H, display: 'block', cursor: 'crosshair' }}
+      style={{ width: '100%', display: 'block', cursor: 'crosshair' }}
       onClick={(e) => onSeek(toTime(getSvgX(e)))}
       onMouseMove={(e) => setHoverX(getSvgX(e))}
       onMouseLeave={() => setHoverX(null)}
@@ -105,20 +100,6 @@ export function Waveform({
           </text>
         </>
       )}
-
-      {/* Beat ticks */}
-      {beats.map((t, i) => {
-        const x = toX(t)
-        const isDown = downbeatsSet.has(String(t))
-        return (
-          <line key={i}
-            x1={x} y1={BEAT_Y + (isDown ? 0 : 8)}
-            x2={x} y2={BEAT_Y + BEAT_H}
-            stroke={isDown ? 'var(--ink-2)' : 'var(--ink-4)'}
-            strokeWidth={isDown ? 1.5 : 0.75}
-          />
-        )
-      })}
 
       {/* Hover crosshair */}
       {hoverX !== null && (

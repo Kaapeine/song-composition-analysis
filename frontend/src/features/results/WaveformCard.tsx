@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Card } from '../../components/Card'
 import { Waveform } from './Waveform'
+import { BeatRuler } from './BeatRuler'
 import { ChordLane } from './ChordLane'
 import type { AnalysisResult } from '../../types/api'
 
@@ -19,11 +20,17 @@ export function WaveformCard({ result, selectedChord, onChordSelect }: WaveformC
       <Waveform
         duration={result.duration_sec}
         rms={result.dynamics?.rms ?? []}
-        beats={result.beats}
-        downbeats={result.downbeats}
         sections={result.sections}
         currentTime={currentTime}
         onSeek={onSeek}
+      />
+      <BeatRuler
+        beats={result.beats}
+        downbeats={result.downbeats}
+        duration={result.duration_sec}
+        sections={result.sections}
+        labelWidth={0}
+        rightWidth={0}
       />
       <ChordLane
         chords={result.harmonic?.chords ?? []}
