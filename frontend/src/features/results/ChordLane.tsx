@@ -39,7 +39,8 @@ export function ChordLane({
 }: ChordLaneProps) {
   const [hoveredIdx, setHoveredIdx] = useState<number | null>(null)
 
-  const trackLeft = labelWidth
+  const TRACK_GAP = labelWidth > 0 ? 8 : 0
+  const trackLeft = labelWidth + TRACK_GAP
   const trackRight = W - rightWidth
   const toX = (t: number) => trackLeft + (t / duration) * (trackRight - trackLeft)
 

@@ -21,7 +21,8 @@ export function BeatRuler({
   labelWidth = 72, rightWidth = 36,
 }: BeatRulerProps) {
   const downbeatsSet = useMemo(() => new Set(downbeats.map(String)), [downbeats])
-  const trackLeft = labelWidth
+  const TRACK_GAP = labelWidth > 0 ? 8 : 0
+  const trackLeft = labelWidth + TRACK_GAP
   const trackRight = W - rightWidth
   const toX = (t: number) => trackLeft + (t / duration) * (trackRight - trackLeft)
 

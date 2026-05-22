@@ -4,6 +4,7 @@ import type { Section, TimeSeries } from '../../types/api'
 
 const W = 1000
 const LABEL_W = 72
+const TRACK_GAP = 8
 const RIGHT_W = 36
 
 interface SignalLaneProps {
@@ -22,7 +23,7 @@ interface SignalLaneProps {
 export function SignalLane({
   label, color, series, duration, yMin, yMax, height, sections, unit = '', stepped = false,
 }: SignalLaneProps) {
-  const toX = (t: number) => LABEL_W + (t / duration) * (W - LABEL_W - RIGHT_W)
+  const toX = (t: number) => LABEL_W + TRACK_GAP + (t / duration) * (W - LABEL_W - TRACK_GAP - RIGHT_W)
   const toY = (v: number) =>
     height - ((Math.min(Math.max(v, yMin), yMax) - yMin) / (yMax - yMin)) * height
 
@@ -51,7 +52,7 @@ export function SignalLane({
       ))}
 
       {[0.25, 0.5, 0.75].map(f => (
-        <line key={f} x1={LABEL_W} y1={f * height} x2={W - RIGHT_W} y2={f * height}
+        <line key={f} x1={LABEL_W + TRACK_GAP} y1={f * height} x2={W - RIGHT_W} y2={f * height}
           stroke="var(--rule)" strokeWidth={0.5} strokeDasharray="3,4"
         />
       ))}
@@ -63,7 +64,7 @@ export function SignalLane({
         />
       )}
 
-      <rect x={0} y={0} width={LABEL_W - 4} height={height} fill="var(--paper-2)" opacity={0.85}/>
+      <rect x={0} y={0} width={LABEL_W} height={height} fill="var(--paper-2)" opacity={0.85}/>
       <circle cx={10} cy={height / 2} r={4} fill={color} opacity={0.8}/>
       <text x={18} y={height / 2} dominantBaseline="middle" fontSize={9}
         fontFamily="var(--font-mono)" fill={color} letterSpacing="0.07em"
