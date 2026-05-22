@@ -12,11 +12,13 @@ def analyze_structure(wav_path: Path, work_dir: Path) -> tuple[dict, Path]:
 
     device = _get_device()
     demix_dir = work_dir / "demix"
+    spec_dir = work_dir / "spec"
     result = allin1.analyze(
         str(wav_path),
         keep_byproducts=True,
         device=device,
         demix_dir=str(demix_dir),
+        spec_dir=str(spec_dir),
     )
 
     stems_dir = demix_dir / "htdemucs" / wav_path.stem
