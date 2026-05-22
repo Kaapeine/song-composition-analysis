@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import type { ChordEntry } from '../../types/api'
+import { useCrosshair } from '../../context/CrosshairProvider'
 
 const W = 1000
 const H = 28
@@ -38,6 +39,8 @@ export function ChordLane({
   labelWidth = 72, rightWidth = 36,
 }: ChordLaneProps) {
   const [hoveredIdx, setHoveredIdx] = useState<number | null>(null)
+  const [hoverX, setHoverX] = useState<number | null>(null)
+  const { hoverTime, setHoverTime } = useCrosshair()
 
   const TRACK_GAP = labelWidth > 0 ? 8 : 0
   const trackLeft = labelWidth + TRACK_GAP
@@ -48,6 +51,14 @@ export function ChordLane({
     <svg
       viewBox={`0 0 ${W} ${H}`}
       style={{ width: '100%', display: 'block', overflow: 'visible' }}
+      onMouseMove={(e) => {
+        const rect = e.currentTarget.getBoundingClientRect()
+        const svgX = ((e.clientX - rect.left) / rect.width) * W
+        setHoverX(svgX)
+        const t = ((svgX - trackLeft) / (trackRight - trackLeft)) * duration
+        setHoverTime(Math.max(0, Math.min(t, duration)))
+      }}
+      onMouseLeave={() => { setHoverTime(null); setHoverX(null) }}
     >
       {chords.map((c, i) => {
         const x1 = toX(c.start)
@@ -85,15 +96,22 @@ export function ChordLane({
         )
       })}
 
-      {/* Hover tooltip */}
-      {hoveredIdx !== null && (() => {
+      {hoverTime !== null && (
+        <line
+          x1={toX(hoverTime)} y1={0}
+          x2={toX(hoverTime)} y2={H}
+          stroke="var(--ink-2)" strokeWidth={0.75}
+          strokeDasharray="2,2" opacity={0.6}
+          pointerEvents="none"
+        />
+      )}
+
+      {/* Hover tooltip — follows cursor, not chord center */}
+      {hoveredIdx !== null && hoverX !== null && (() => {
         const c = chords[hoveredIdx]
-        const x1 = toX(c.start)
-        const x2 = Math.min(toX(c.end), trackRight)
-        const midX = (x1 + x2) / 2
         const label = c.roman && c.roman !== c.chord ? `${c.chord} · ${c.roman}` : c.chord
         const tw = label.length * 6.5 + 14
-        const tx = Math.min(Math.max(midX, trackLeft + tw / 2 + 2), trackRight - tw / 2 - 2)
+        const tx = Math.min(Math.max(hoverX, trackLeft + tw / 2 + 2), trackRight - tw / 2 - 2)
         return (
           <g pointerEvents="none">
             <rect x={tx - tw / 2} y={-17} width={tw} height={15} rx={3}

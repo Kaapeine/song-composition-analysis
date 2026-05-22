@@ -2,6 +2,7 @@ import { Card } from '../../components/Card'
 import { ChordLane } from './ChordLane'
 import { SignalLane } from './SignalLane'
 import { BeatRuler } from './BeatRuler'
+import { CrosshairProvider } from '../../context/CrosshairProvider'
 import type { AnalysisResult } from '../../types/api'
 
 interface SignalsCardProps {
@@ -23,6 +24,7 @@ export function SignalsCard({ result, selectedChord, onChordSelect }: SignalsCar
 
   return (
     <Card title="Signal Lanes">
+      <CrosshairProvider>
       <div style={{ display: 'flex', flexDirection: 'column' }}>
         <ChordLane
           chords={harmonic?.chords ?? []}
@@ -86,6 +88,7 @@ export function SignalsCard({ result, selectedChord, onChordSelect }: SignalsCar
           sections={sections}
         />
       </div>
+      </CrosshairProvider>
     </Card>
   );
 }

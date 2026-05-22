@@ -61,7 +61,6 @@ export function ResultsPage() {
         {hasInstruments && <InstrumentsCard stems={result.stems!} />}
         <SectionComparison stats={result.section_comparison ?? [] as SectionStat[]} />
       </div>
-      {/* TranspositionCard — re-enable once layout is verified */}
     </main>
   )
 }

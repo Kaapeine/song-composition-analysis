@@ -1,5 +1,6 @@
 import { Card } from '../../components/Card'
 import { AudioProvider } from '../../hooks/useAudio'
+import { CrosshairProvider } from '../../context/CrosshairProvider'
 import { Waveform } from './Waveform'
 import { BeatRuler } from './BeatRuler'
 import { ChordLane } from './ChordLane'
@@ -15,6 +16,7 @@ interface WaveformCardProps {
 export function WaveformCard({ result, selectedChord, onChordSelect }: WaveformCardProps) {
   return (
     <AudioProvider src={result.playback_url}>
+      <CrosshairProvider>
       <Card style={{ overflow: 'hidden' }}>
         <div style={{ padding: '12px 14px 0' }}>
           <Waveform
@@ -44,6 +46,7 @@ export function WaveformCard({ result, selectedChord, onChordSelect }: WaveformC
           duration={result.duration_sec}
         />
       </Card>
+      </CrosshairProvider>
     </AudioProvider>
   )
 }

@@ -1,6 +1,7 @@
 import { useMemo } from 'react'
 import { sectionColor } from '../../lib/utils'
 import type { Section, TimeSeries } from '../../types/api'
+import { useCrosshair } from '../../context/CrosshairProvider'
 
 const W = 1000
 const LABEL_W = 72
@@ -34,8 +35,12 @@ export function SignalLane({
   stepped = false,
   annotateMax = false,
 }: SignalLaneProps) {
-  const toX = (t: number) =>
-    LABEL_W + TRACK_GAP + (t / duration) * (W - LABEL_W - TRACK_GAP - RIGHT_W);
+  const { hoverTime, setHoverTime } = useCrosshair()
+
+  const TRACK_LEFT = LABEL_W + TRACK_GAP
+  const TRACK_RIGHT = W - RIGHT_W
+
+  const toX = (t: number) => TRACK_LEFT + (t / duration) * (TRACK_RIGHT - TRACK_LEFT)
   const toY = (v: number) =>
     height -
     ((Math.min(Math.max(v, yMin), yMax) - yMin) / (yMax - yMin)) * height;
@@ -55,10 +60,26 @@ export function SignalLane({
     return series.map(([t, v]) => `${toX(t)},${toY(v)}`).join(' ');
   }, [series, duration, yMin, yMax, stepped]);
 
+  let hoverPoint: { x: number; y: number; val: number } | null = null
+  if (hoverTime !== null && series.length > 0) {
+    let best = 0
+    for (let i = 1; i < series.length; i++) {
+      if (Math.abs(series[i][0] - hoverTime) < Math.abs(series[best][0] - hoverTime)) best = i
+    }
+    hoverPoint = { x: toX(series[best][0]), y: toY(series[best][1]), val: series[best][1] }
+  }
+
   return (
     <svg
       viewBox={`0 0 ${W} ${height}`}
       style={{ width: '100%', display: 'block' }}
+      onMouseMove={(e) => {
+        const rect = e.currentTarget.getBoundingClientRect()
+        const svgX = ((e.clientX - rect.left) / rect.width) * W
+        const t = ((svgX - TRACK_LEFT) / (TRACK_RIGHT - TRACK_LEFT)) * duration
+        setHoverTime(Math.max(0, Math.min(t, duration)))
+      }}
+      onMouseLeave={() => setHoverTime(null)}
     >
       {sections.map((s, i) => (
         <rect
@@ -129,6 +150,29 @@ export function SignalLane({
           strokeLinecap="round"
           opacity={0.9}
         />
+      )}
+
+      {hoverTime !== null && (
+        <line
+          x1={toX(hoverTime)} y1={0}
+          x2={toX(hoverTime)} y2={height}
+          stroke="var(--ink-3)" strokeWidth={0.75}
+          strokeDasharray="2,3" opacity={0.6}
+          pointerEvents="none"
+        />
+      )}
+      {hoverPoint !== null && (
+        <g pointerEvents="none">
+          <circle cx={hoverPoint.x} cy={hoverPoint.y} r={3}
+            fill={color} stroke="var(--paper-2)" strokeWidth={1.5} />
+          <text
+            x={Math.min(hoverPoint.x + 6, TRACK_RIGHT - 32)}
+            y={Math.max(hoverPoint.y - 4, 10)}
+            fontSize={8} fontFamily="var(--font-mono)"
+            fill={color} opacity={0.9}>
+            {hoverPoint.val.toFixed(1)}{unit}
+          </text>
+        </g>
       )}
 
       <rect
