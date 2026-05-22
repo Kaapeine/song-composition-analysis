@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { Card } from '../../components/Card'
-import { SectionRibbon } from './SectionRibbon'
 import { Waveform } from './Waveform'
+import { ChordLane } from './ChordLane'
 import type { AnalysisResult } from '../../types/api'
 
 interface WaveformCardProps {
@@ -12,37 +12,27 @@ interface WaveformCardProps {
 
 export function WaveformCard({ result, selectedChord, onChordSelect }: WaveformCardProps) {
   const [currentTime] = useState(0)
-  const onSeek = (_t: number) => { /* wired to AudioProvider in Task 19 */ }
+  const onSeek = (_t: number) => { /* wired to AudioProvider in Task 18 */ }
 
   return (
-    <Card>
-      <div style={{ padding: '12px 16px 0', display: 'flex', alignItems: 'center', gap: 12 }}>
-        <audio
-          controls
-          src={result.playback_url}
-          style={{ height: 32, flex: 1, minWidth: 0 }}
-        />
-      </div>
-      <SectionRibbon
-        sections={result.sections}
+    <Card style={{ overflow: 'hidden' }}>
+      <Waveform
         duration={result.duration_sec}
+        rms={result.dynamics?.rms ?? []}
+        beats={result.beats}
+        downbeats={result.downbeats}
+        sections={result.sections}
         currentTime={currentTime}
         onSeek={onSeek}
       />
-      <div style={{ borderTop: '1px solid var(--rule-soft)' }}>
-        <Waveform
-          duration={result.duration_sec}
-          rms={result.dynamics?.rms ?? []}
-          beats={result.beats}
-          downbeats={result.downbeats}
-          sections={result.sections}
-          chords={result.harmonic?.chords ?? []}
-          selectedChord={selectedChord}
-          onChordSelect={onChordSelect}
-          currentTime={currentTime}
-          onSeek={onSeek}
-        />
-      </div>
+      <ChordLane
+        chords={result.harmonic?.chords ?? []}
+        duration={result.duration_sec}
+        selectedChord={selectedChord}
+        onChordSelect={onChordSelect}
+        labelWidth={0}
+        rightWidth={0}
+      />
     </Card>
   )
 }

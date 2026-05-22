@@ -109,4 +109,15 @@ function X({ size = 16, style }: IconProps) {
   )
 }
 
-export const Icon = { Logo, Sun, Moon, Upload, Play, Pause, SkipBack, SkipFwd, Copy, Share, X }
+function PDF({ size = 16, style }: IconProps) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" style={style}>
+      <path d="M9 2H4a1 1 0 0 0-1 1v10a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1V6L9 2z"/>
+      <path d="M9 2v4h4" strokeLinejoin="round"/>
+      <line x1="5" y1="9" x2="11" y2="9"/>
+      <line x1="5" y1="11.5" x2="9" y2="11.5"/>
+    </svg>
+  )
+}
+
+export const Icon = { Logo, Sun, Moon, Upload, Play, Pause, SkipBack, SkipFwd, Copy, Share, X, PDF }

@@ -8,6 +8,7 @@ import { SignalsCard } from './SignalsCard'
 import { PitchClassCard } from './PitchClassCard'
 import { InstrumentsCard } from './InstrumentsCard'
 import { SectionComparison } from './SectionComparison'
+import type { SectionStat } from '../../types/api'
 
 export function ResultsPage() {
   const { jobId } = useParams<{ jobId: string }>()
@@ -16,7 +17,7 @@ export function ResultsPage() {
 
   if (isLoading) {
     return (
-      <main style={{ maxWidth: 1080, margin: '48px auto', padding: '0 28px' }}>
+      <main style={{ maxWidth: 1400, margin: '48px auto', padding: '0 28px' }}>
         <div style={{ color: 'var(--ink-3)', fontFamily: 'var(--font-mono)', fontSize: 13 }}>
           Loading results…
         </div>
@@ -26,7 +27,7 @@ export function ResultsPage() {
 
   if (error || !result) {
     return (
-      <main style={{ maxWidth: 1080, margin: '48px auto', padding: '0 28px' }}>
+      <main style={{ maxWidth: 1400, margin: '48px auto', padding: '0 28px' }}>
         <div style={{
           background: 'color-mix(in oklab, var(--warn) 8%, var(--paper-2))',
           border: '1px solid color-mix(in oklab, var(--warn) 30%, transparent)',
@@ -44,7 +45,7 @@ export function ResultsPage() {
   const hasInstruments = Object.keys(result.stems ?? {}).length > 0
 
   return (
-    <main style={{ maxWidth: 1080, margin: '40px auto', padding: '0 28px', display: 'flex', flexDirection: 'column', gap: 20 }}>
+    <main style={{ maxWidth: 1400, margin: '0 auto', padding: '24px 28px 80px', display: 'flex', flexDirection: 'column', gap: 20 }}>
       <SubHeader result={result} />
       <HeroSummary result={result} />
       <WaveformCard
@@ -53,15 +54,13 @@ export function ResultsPage() {
         onChordSelect={setSelectedChord}
       />
       <SignalsCard result={result} selectedChord={selectedChord} onChordSelect={setSelectedChord} />
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: '1.4fr 1fr 1.2fr', gap: 20 }}>
         {result.pitch_class_histogram && (
           <PitchClassCard histogram={result.pitch_class_histogram} tonic={result.key.root} />
         )}
         {hasInstruments && <InstrumentsCard stems={result.stems!} />}
+        <SectionComparison stats={result.section_comparison ?? [] as SectionStat[]} />
       </div>
-      {result.section_comparison && (
-        <SectionComparison stats={result.section_comparison} />
-      )}
       {/* TranspositionCard — re-enable once layout is verified */}
     </main>
   )
