@@ -1,4 +1,5 @@
 import { useMemo, useRef, useState } from 'react'
+import { useAudio } from '../../hooks/useAudio'
 import { downsampleRms, formatTime, sectionColor, sectionInkColor } from '../../lib/utils'
 import type { Section, TimeSeries } from '../../types/api'
 
@@ -12,13 +13,10 @@ interface WaveformProps {
   duration: number
   rms: TimeSeries
   sections: Section[]
-  currentTime: number
-  onSeek: (t: number) => void
 }
 
-export function Waveform({
-  duration, rms, sections, currentTime, onSeek,
-}: WaveformProps) {
+export function Waveform({ duration, rms, sections }: WaveformProps) {
+  const { currentTime, seek } = useAudio()
   const svgRef = useRef<SVGSVGElement>(null)
   const [hoverX, setHoverX] = useState<number | null>(null)
 
@@ -41,7 +39,7 @@ export function Waveform({
       ref={svgRef}
       viewBox={`0 0 ${W} ${H}`}
       style={{ width: '100%', display: 'block', cursor: 'crosshair' }}
-      onClick={(e) => onSeek(toTime(getSvgX(e)))}
+      onClick={(e) => seek(toTime(getSvgX(e)))}
       onMouseMove={(e) => setHoverX(getSvgX(e))}
       onMouseLeave={() => setHoverX(null)}
     >
