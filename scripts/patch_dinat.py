@@ -112,7 +112,7 @@ NEW_FORWARD = (
     "    else:  # 2D: (B, H, X, Y, D) -> (B, X, Y, H, D)\n"
     "      q = query_layer.permute(0, 2, 3, 1, 4)\n"
     "      k = key_layer.permute(0, 2, 3, 1, 4)\n"
-    "      v = value_layer.permute(0, 2, 1, 4)\n"
+    "      v = value_layer.permute(0, 2, 3, 1, 4)\n"
     "      out = self.nattn_fn(q, k, v, kernel_size=self.kernel_size, dilation=self.dilation, scale=1.0, rpb=self.rpb)\n"
     "      context_layer = out.permute(0, 3, 1, 2, 4).contiguous()  # (B, X, Y, H, D) -> (B, H, X, Y, D)\n"
     "\n"
