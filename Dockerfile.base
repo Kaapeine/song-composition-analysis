@@ -6,29 +6,40 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 
 WORKDIR /app
 
-# PyTorch CPU — install before anything that depends on it
+# PyTorch CPU — 2.4.0 is the minimum required for torch.amp.custom_bwd (used by demucs 4.0.1)
 # CPU-only build is ~800MB vs ~2.5GB for CUDA; appropriate for VPS/Railway
 RUN pip install --no-cache-dir \
-    torch==2.3.0 torchaudio==2.3.0 \
+    torch==2.4.0 torchaudio==2.4.0 \
     --index-url https://download.pytorch.org/whl/cpu
 
-# ninja speeds up any remaining C++ compilation steps
-RUN pip install --no-cache-dir ninja
+# torchcodec — required by torchaudio 2.4+
+RUN pip install --no-cache-dir torchcodec
 
-# NATTEN — neighborhood attention library required by allin1
-# Pre-built CPU wheel for torch 2.3.0
-RUN pip install --no-cache-dir natten \
-    --find-links https://shi-labs.com/natten/wheels/cpu/torch230/index.html
+# ninja speeds up any remaining C++ compilation steps
+RUN pip install --no-cache-dir ninja==1.13.0
+
+# NATTEN 0.21.6 — neighborhood attention library required by allin1
+# Pre-built CPU wheel for torch 2.4.0
+RUN pip install --no-cache-dir natten==0.21.6 \
+    --find-links https://shi-labs.com/natten/wheels/cpu/torch240/index.html
 
 # madmom — must be installed from git (PyPI version is outdated)
 RUN pip install --no-cache-dir "git+https://github.com/CPJKU/madmom"
 
-# allin1 — music structure analysis
-RUN pip install --no-cache-dir allin1
+# demucs 4.0.1 — pinned for stability
+RUN pip install --no-cache-dir "demucs==4.0.1"
+
+# allin1 1.1.0 — music structure analysis
+RUN pip install --no-cache-dir "allin1==1.1.0"
 
 # Remaining application dependencies (FastAPI, SQLAlchemy, librosa, etc.)
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
+
+# Patch allin1/models/dinat.py for NATTEN 0.21+ API compatibility
+# (replaces NATTEN ops with pure PyTorch — required because allin1 was written for NATTEN < 0.17)
+COPY scripts/patch_dinat.py /tmp/patch_dinat.py
+RUN python3 /tmp/patch_dinat.py && rm /tmp/patch_dinat.py
 
 # Pre-download demucs and allin1 model weights (~500MB total)
 # Baking into the base means the first analysis job is not slow
