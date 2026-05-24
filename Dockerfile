@@ -8,7 +8,7 @@ RUN npm run build
 
 # Stage 2 — application
 # Replace YOUR_GITHUB_USERNAME with your actual GitHub username
-FROM ghcr.io/kaapeine/musicanalyzer-base:latest
+FROM ghcr.io/Kaapeine/musicanalyzer-base:latest
 
 WORKDIR /app
 
