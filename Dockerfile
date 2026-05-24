@@ -1,12 +1,24 @@
-FROM python:3.12-slim
+# Stage 1 — build the React frontend
+FROM node:20-slim AS frontend-build
+WORKDIR /frontend
+COPY frontend/package*.json ./
+RUN npm ci
+COPY frontend/ ./
+RUN npm run build
 
-RUN apt-get update && apt-get install -y \
-    ffmpeg git build-essential \
-    && rm -rf /var/lib/apt/lists/*
+# Stage 2 — application
+# Replace YOUR_GITHUB_USERNAME with your actual GitHub username
+FROM ghcr.io/kaapeine/musicanalyzer-base:latest
 
 WORKDIR /app
-COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
 
 COPY . .
-CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
+
+# Copy the built frontend from stage 1 (excluded from build context via .dockerignore)
+COPY --from=frontend-build /frontend/dist ./frontend/dist
+
+COPY entrypoint.sh .
+RUN chmod +x entrypoint.sh
+
+EXPOSE 8000
+ENTRYPOINT ["./entrypoint.sh"]

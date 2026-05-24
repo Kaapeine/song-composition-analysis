@@ -14,10 +14,7 @@ alembic>=1.13.0
 # Storage
 boto3>=1.34.0
 
-# Audio conversion
-ffmpeg-python>=0.2.0
-
-# Analysis — install after torch
+# Analysis
 numpy>=1.26.0
 scipy>=1.13.0
 soundfile>=0.12.3
@@ -25,9 +22,9 @@ librosa>=0.10.0
 pyloudnorm>=0.1.1
 music21>=9.1.0
 
-# Install these manually in order (see README):
-# 1. pip install torch torchaudio  (GPU/MPS version matching your system)
+# These must be installed separately in order (handled by Dockerfile.base):
+# 1. pip install torch torchaudio --index-url https://download.pytorch.org/whl/cpu
 # 2. pip install ninja
-# 3. pip install git+https://github.com/CPJKU/madmom
-# 4. pip install basic-pitch
-# 5. pip install allin1  (or allin1fix for PyTorch 2.x)
+# 3. pip install natten --find-links https://shi-labs.com/natten/wheels/cpu/torch230/index.html
+# 4. pip install git+https://github.com/CPJKU/madmom
+# 5. pip install allin1

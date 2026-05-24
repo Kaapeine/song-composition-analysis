@@ -8,6 +8,12 @@ config = context.config
 if config.config_file_name is not None:
     fileConfig(config.config_file_name)
 
+# Override alembic.ini URL with DATABASE_URL env var so Docker works correctly.
+# Convert asyncpg driver to psycopg2 since alembic uses a sync connection.
+from app.config import settings
+sync_url = settings.DATABASE_URL.replace("postgresql+asyncpg://", "postgresql+psycopg2://")
+config.set_main_option("sqlalchemy.url", sync_url)
+
 target_metadata = Base.metadata
 
 

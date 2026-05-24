@@ -1,0 +1,36 @@
+FROM python:3.12-slim
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    ffmpeg git build-essential \
+    && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /app
+
+# PyTorch CPU — install before anything that depends on it
+# CPU-only build is ~800MB vs ~2.5GB for CUDA; appropriate for VPS/Railway
+RUN pip install --no-cache-dir \
+    torch==2.3.0 torchaudio==2.3.0 \
+    --index-url https://download.pytorch.org/whl/cpu
+
+# ninja speeds up any remaining C++ compilation steps
+RUN pip install --no-cache-dir ninja
+
+# NATTEN — neighborhood attention library required by allin1
+# Pre-built CPU wheel for torch 2.3.0
+RUN pip install --no-cache-dir natten \
+    --find-links https://shi-labs.com/natten/wheels/cpu/torch230/index.html
+
+# madmom — must be installed from git (PyPI version is outdated)
+RUN pip install --no-cache-dir "git+https://github.com/CPJKU/madmom"
+
+# allin1 — music structure analysis
+RUN pip install --no-cache-dir allin1
+
+# Remaining application dependencies (FastAPI, SQLAlchemy, librosa, etc.)
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Pre-download demucs and allin1 model weights (~500MB total)
+# Baking into the base means the first analysis job is not slow
+COPY scripts/download_models.py /tmp/download_models.py
+RUN python3 /tmp/download_models.py && rm /tmp/download_models.py
