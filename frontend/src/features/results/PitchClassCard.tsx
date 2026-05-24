@@ -55,7 +55,6 @@ export function PitchClassCard({ histogram, tonic }: PitchClassCardProps) {
     return new Set(raw.map(n => n === '1 (root)' ? '1' : n))
   }, [histogram.avoid_notes])
 
-  const maxVal = Math.max(...DEGREES.map(d => values[d] ?? 0), 0.0001)
   const avoidCount = avoidSet.size
 
   return (

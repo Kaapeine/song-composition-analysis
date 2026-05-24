@@ -47,7 +47,7 @@ export function AppHeader({ theme, onToggleTheme }: AppHeaderProps) {
         border: '1px solid var(--rule)', borderRadius: 999,
       }}>
         {([
-          { to: '/', label: 'Upload', active: !isResults },
+          { to: '/', label: 'Upload', active: !isResults, disabled: false },
           { to: loc.pathname, label: 'Analysis', active: isResults, disabled: !isResults },
         ] as const).map(({ to, label, active, disabled }) => (
           <Link

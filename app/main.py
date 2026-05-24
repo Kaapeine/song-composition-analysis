@@ -25,3 +25,15 @@ app.include_router(upload.router)
 app.include_router(analyze.router)
 app.include_router(jobs.router)
 app.include_router(files.router)
+
+if settings.SERVE_FRONTEND:
+    from pathlib import Path
+    from fastapi.staticfiles import StaticFiles
+    FRONTEND_DIST = Path(__file__).parent.parent / "frontend" / "dist"
+    if not FRONTEND_DIST.exists():
+        raise RuntimeError(
+            f"SERVE_FRONTEND=true but no dist folder found at {FRONTEND_DIST}. "
+            "Run `cd frontend && npm run build` first."
+        )
+    app.mount("/", StaticFiles(directory=str(FRONTEND_DIST), html=True), name="frontend")
+    print("Frontend pages are being served.")

@@ -31,6 +31,9 @@ class Settings(BaseSettings):
     # CORS
     ALLOWED_ORIGINS: str = "http://localhost:3000"
 
+    # Frontend — set to true only in production (after npm run build)
+    SERVE_FRONTEND: bool = False
+
     class Config:
         env_file = ".env"
 
