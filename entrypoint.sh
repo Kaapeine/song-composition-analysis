@@ -1,7 +1,6 @@
 #!/bin/bash
 set -e
 
-echo "DATABASE_URL is set: ${DATABASE_URL:+yes}${DATABASE_URL:-NO - variable is missing}"
 echo "Running database migrations..."
 alembic upgrade head
 
