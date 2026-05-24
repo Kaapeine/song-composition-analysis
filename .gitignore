@@ -9,3 +9,4 @@ demix/
 .venv/
 dist/
 .python-version
+docs/.DS_Store
